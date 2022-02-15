@@ -1,0 +1,24 @@
+trigger: none
+stages:
+  - stage: destroy
+    jobs:
+      - job: destroy
+        steps:
+        - task: TerraformInstaller@0
+          inputs:
+            terraformVersion: '1.1.5'
+         
+        - task: TerraformTaskV2@2
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            backendServiceArm: 'dev'
+            backendAzureRmResourceGroupName: 'dev-004'
+            backendAzureRmStorageAccountName: 'tfstatefaisal'
+            backendAzureRmContainerName: 'tfstate'
+            backendAzureRmKey: 'tf.tfstate'
+        - task: TerraformTaskV2@2
+          inputs:
+            provider: 'azurerm'
+            command: 'destroy'
+            environmentServiceNameAzureRM: 'dev'

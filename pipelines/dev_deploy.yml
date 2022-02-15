@@ -1,0 +1,67 @@
+trigger: none
+stages:
+  - stage: validate
+    jobs:
+      - job: validate
+        steps:
+        - task: TerraformInstaller@0
+          displayName: 'installing terraform'
+          inputs:
+            terraformVersion: '1.1.5'
+
+        - task: TerraformTaskV2@2
+          displayName: 'init'
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            backendServiceArm: 'dev'
+            backendAzureRmResourceGroupName: 'dev-004'
+            backendAzureRmStorageAccountName: 'tfstatefaisal'
+            backendAzureRmContainerName: 'tfstate'
+            backendAzureRmKey: 'tf.tfstate'
+            
+
+        - task: TerraformTaskV2@2
+          displayName: 'validate'
+          inputs:
+            provider: 'azurerm'
+            command: 'validate'
+            
+        
+  - stage: deploy
+    jobs:
+     - deployment: deploy
+       environment: dev
+       strategy:
+        runOnce:
+           deploy:
+             steps:
+               - checkout: self
+                 
+               - task: TerraformInstaller@0
+                 inputs:
+                    terraformVersion: '1.1.5'
+               - task: TerraformTaskV2@2
+                 displayName: 'init'
+                 inputs:
+                   provider: 'azurerm'
+                   command: 'init'
+                   backendServiceArm: 'dev'
+                   backendAzureRmResourceGroupName: 'dev-004'
+                   backendAzureRmStorageAccountName: 'tfstatefaisal'
+                   backendAzureRmContainerName: 'tfstate'
+                   backendAzureRmKey: 'tf.tfstate'
+                
+               - task: TerraformTaskV2@2
+                 displayName: 'plan'
+                 inputs:
+                   provider: 'azurerm'
+                   command: 'plan'
+                   environmentServiceNameAzureRM: 'dev'
+              
+               - task: TerraformTaskV2@2
+                 displayName: 'apply'
+                 inputs:
+                   provider: 'azurerm'
+                   command: 'apply'
+                   environmentServiceNameAzureRM: 'dev'
